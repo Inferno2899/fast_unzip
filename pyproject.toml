@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "fast-unzip"
+version = "0.1.0"
+description = "Fast multithread/multiprocess unzipper"
+authors = ["Nikita Pshenko <pshenko1999@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "fast_unzip", from = "src"}]
+homepage = "https://github.com/Inferno2899/fast_unzip.git"
+repository = "https://github.com/Inferno2899/fast_unzip.git"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
