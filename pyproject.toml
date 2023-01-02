@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fast-unzip"
-version = "0.1.0"
+version = "1.0.0"
 description = "Fast multithread/multiprocess unzipper"
 authors = ["Nikita Pshenko <pshenko1999@gmail.com>"]
 readme = "README.md"
@@ -22,3 +22,6 @@ python = "^3.8"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+fast_unzip = "src.fast_unzip.fast_unzip:main"

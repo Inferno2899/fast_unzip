@@ -217,17 +217,22 @@ class Controller:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('archive_path', metavar='path', type=Path)
-    parser.add_argument('-p', '--n_proc', default=None, type=int,
-                        help='Number of processes')
+    parser = argparse.ArgumentParser(prog="fast unzipper",
+                                     description="unzips ZIP archives",
+                                     )
+    parser.add_argument('archive_path', metavar='path', type=Path,
+                        help="path to ZIP archive")
+    parser.add_argument('-p', '--n_proc', default=None, type=int, metavar="",
+                        help='number of processes')
     parser.add_argument('-t', '--n_threads', default=None, type=int,
-                        help='Number of threads for tasks in one process')
+                        metavar="",
+                        help='number of threads for tasks in one process')
     parser.add_argument('-d', '--outdir', default=Path('./ZIP_unpack'),
-                        type=Path, help='Output directory to put unpacked \
+                        metavar="",
+                        type=Path, help='output directory to put unpacked \
                             data')
-    parser.add_argument('-m', '--mode', default=None,
-                        type=str, help='Mode in which program should work:\
+    parser.add_argument('-m', '--mode', default=None, metavar="",
+                        type=str, help='mode in which program should work:\
                             "mt" or "cmbd"')
     args = parser.parse_args()
 
@@ -254,8 +259,3 @@ def main() -> None:
     elif args.mode == "cmbd":
         CombinedUnzipper(args.archive_path, args.outdir, args.n_proc,
                          args.n_threads).unzip()
-
-
-# entry point
-if __name__ == '__main__':
-    main()
