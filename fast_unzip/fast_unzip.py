@@ -7,10 +7,10 @@ import pickle
 import sys
 from array import array
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from os import cpu_count, makedirs
 from pathlib import Path
 from typing import Any, Final, Iterable, Literal, Optional, Union
 from zipfile import ZipFile
+
 
 # Threshold to choose mode
 THRESHOLD: Final = 0.5
@@ -18,51 +18,56 @@ THRESHOLD: Final = 0.5
 # Aliases
 ReadOnlyBuffer = bytes
 if sys.version_info >= (3, 8):
-    WriteableBuffer = (
-        Union[bytearray, memoryview, mmap.mmap,
-              pickle.PickleBuffer]
-    )
+    WriteableBuffer = Union[bytearray, memoryview, mmap.mmap, pickle.PickleBuffer]
 else:
-    WriteableBuffer = Union[bytearray, memoryview, array.array[
-        Any], mmap.mmap, ctypes._CData]
+    WriteableBuffer = Union[
+        bytearray,
+        memoryview,
+        array.array[Any],
+        mmap.mmap,
+        ctypes._CData,
+    ]
 ReadableBuffer = Union[ReadOnlyBuffer, WriteableBuffer]
 
 
 # Exceptions
 class UnableToCountCores(BaseException):
     """Unable to automatically find number of cores."""
+
     pass
 
 
 class IncorrectNumberOfCores(BaseException):
     """Entered number more than there are cores on computer."""
+
     pass
 
 
 class EmptyArchiveError(BaseException):
     """Archive is empty. Nothing to unzip."""
+
     pass
 
 
 class AllFilesAreEmpty(BaseException):
     """All files in archive is 0 bytes."""
+
     pass
 
 
 class CannotUseZeroCores(BaseException):
     """Number of cores cannot be zero"""
+
     pass
 
 
 class Unzipper:
-
     """Unzipper prototype."""
 
-    def __init__(self, zip_archive: str, path: str,
-                 threads: Optional[int]) -> None:
+    def __init__(self, zip_archive: str, path: str, threads: Optional[int]) -> None:
         self._path = path  # Where to unpack
         self._zip_archive = zip_archive  # Where zip archive is
-        self._cpu = cpu_count()  # CPU count for automatic work
+        self._cpu = os.cpu_count()  # CPU count for automatic work
         # Check for all situations, raise errors is smth is wrong
         if threads is None and self._cpu is None:
             raise UnableToCountCores("Enter cores or threads implicitly.")
@@ -77,14 +82,13 @@ class Unzipper:
     # save file to disk
     def _save_file(self, data: ReadableBuffer, filename: str) -> None:
         # create a path
-        filepath = os.path.join(self._path, filename)
+        filepath = self._path / filename
         # write to disk
-        with open(filepath, 'wb') as file:
+        with open(filepath, "wb") as file:
             file.write(data)
 
 
 class MultiThreadUnzipper(Unzipper):
-
     """Unzipper for high compression levels"""
 
     # unzip files from an archive
@@ -97,7 +101,7 @@ class MultiThreadUnzipper(Unzipper):
     # unzip a large number of files
     def unzip(self) -> None:
         # open the zip file
-        with ZipFile(self._zip_archive, 'r') as handle:
+        with ZipFile(self._zip_archive, "r") as handle:
             # list of all files to unzip
             files = handle.namelist()
             if len(files) == 0:
@@ -109,17 +113,21 @@ class MultiThreadUnzipper(Unzipper):
                 # split the copy operations into chunks
                 for i in range(0, len(files), chunksize):
                     # select a chunk of filenames
-                    filenames = files[i:(i + chunksize)]
+                    filenames = files[i : (i + chunksize)]
                     # submit the batch copy task
                     _ = exe.submit(self.__unzip_files, handle, filenames)
 
 
 class CombinedUnzipper(Unzipper):
-
     """Unzipper for low compression levels"""
 
-    def __init__(self, zip_archive: str, path: str, processes: Optional[int],
-                 threads: Optional[int]) -> None:
+    def __init__(
+        self,
+        zip_archive: str,
+        path: str,
+        processes: Optional[int],
+        threads: Optional[int],
+    ) -> None:
         # Takes Unzipper constructor
         super().__init__(path, zip_archive, threads)
         # Checking for all types of input, raises errors if smth is wrong
@@ -132,13 +140,17 @@ class CombinedUnzipper(Unzipper):
                 raise CannotUseZeroCores("Enter appropriate number.")
             else:
                 self.__processes = processes
-            print("Attention!!! Unable to count cores. Please ensure you \
+            print(
+                "Attention!!! Unable to count cores. Please ensure you \
                 entered correct number, else it can lead to \
-                undefined behaviour.")
+                undefined behaviour."
+            )
         elif processes is not None and self._cpu is not None:
             if processes > self._cpu:
-                raise IncorrectNumberOfCores("Entered more cores than there \
-                    are on computer.")
+                raise IncorrectNumberOfCores(
+                    "Entered more cores than there \
+                    are on computer."
+                )
             elif processes == 0:
                 raise CannotUseZeroCores("Enter appropriate number.")
             else:
@@ -147,7 +159,7 @@ class CombinedUnzipper(Unzipper):
     # unzip files from an archive
     def __unzip_files(self, filenames: Iterable[str]) -> None:
         # open the zip file
-        with ZipFile(self._zip_archive, 'r') as handle:
+        with ZipFile(self._zip_archive, "r") as handle:
             # create a thread pool
             with ThreadPoolExecutor(self._threads) as exe:
                 # unzip each file
@@ -160,9 +172,10 @@ class CombinedUnzipper(Unzipper):
     # unzip a large number of files
     def unzip(self) -> None:
         # create the target directory
-        makedirs(self._path, exist_ok=True)
+        print(self._path)
+        self._path.mkdir(exist_ok=True)
         # open the zip file
-        with ZipFile(self._zip_archive, 'r') as handle:
+        with ZipFile(self._zip_archive, "r") as handle:
             # list of all files to unzip
             files = handle.namelist()
             if len(files) == 0:
@@ -174,7 +187,7 @@ class CombinedUnzipper(Unzipper):
             # split the copy operations into chunks
             for i in range(0, len(files), chunksize):
                 # select a chunk of filenames
-                filenames = files[i:(i + chunksize)]
+                filenames = files[i : (i + chunksize)]
                 # submit the batch copy task
                 _ = exe.submit(self.__unzip_files, filenames)
 
@@ -183,8 +196,7 @@ class Controller:
 
     """Decides what subprogram to use using precalculated compression level"""
 
-    def __init__(self, mode: Literal["mt", "cmbd", None],
-                 zip_archive: str) -> None:
+    def __init__(self, mode: Literal["mt", "cmbd", None], zip_archive: str) -> None:
         self.mode = mode  # Initial mode or None if not specified
         self.zip_archive = zip_archive  # Where zip archive is
 
@@ -207,7 +219,7 @@ class Controller:
         if len(compression) == 0:
             # In case ZIP archive is empty
             raise AllFilesAreEmpty("All files are 0 bytes.")
-        return (sum(compression) / len(compression))
+        return sum(compression) / len(compression)
 
     def get_compression(self) -> float:
 
@@ -217,26 +229,53 @@ class Controller:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="fast unzipper",
-                                     description="unzips ZIP archives",
-                                     )
-    parser.add_argument('archive_path', metavar='path', type=Path,
-                        help="path to ZIP archive")
-    parser.add_argument('-p', '--n_proc', default=None, type=int, metavar="",
-                        help='number of processes')
-    parser.add_argument('-t', '--n_threads', default=None, type=int,
-                        metavar="",
-                        help='number of threads for tasks in one process')
-    parser.add_argument('-d', '--outdir', default=Path('./ZIP_unpack'),
-                        metavar="",
-                        type=Path, help='output directory to put unpacked \
-                            data')
-    parser.add_argument('-m', '--mode', default=None, metavar="",
-                        type=str, help='mode in which program should work:\
-                            "mt" or "cmbd"')
+    parser = argparse.ArgumentParser(
+        prog="fast_unzip",
+        description="unzips ZIP archives",
+    )
+    parser.add_argument(
+        "archive_path",
+        metavar="PATH",
+        type=Path,
+        help="path to ZIP archive",
+    )
+    parser.add_argument(
+        "-p",
+        "--n_proc",
+        default=None,
+        type=int,
+        metavar="N",
+        help="number of processes",
+    )
+    parser.add_argument(
+        "-t",
+        "--n_threads",
+        default=None,
+        type=int,
+        metavar="N",
+        help="number of threads for tasks in one process",
+    )
+    parser.add_argument(
+        "-d",
+        "--outdir",
+        default=Path("."),
+        metavar="PATH",
+        type=Path,
+        help="output directory to put unpacked \
+                            data",
+    )
+    parser.add_argument(
+        "-m",
+        "--mode",
+        default=None,
+        metavar="MODE",
+        type=str,
+        help='mode in which program should work:\
+                            "mt" or "cmbd"',
+    )
     args = parser.parse_args()
 
-    assert args.archive_path.exists(), f'{args.archive_path}'
+    assert args.archive_path.exists(), f"{args.archive_path}"
     return args
 
 
@@ -244,18 +283,23 @@ def main() -> None:
     args = parse_args()
     if args.mode is None:
         # If mode isn't specified controller decides what to use
-        compression = (Controller(args.mode, args.archive_path)
-                       .get_compression())
+        compression = Controller(args.mode, args.archive_path).get_compression()
         if compression > THRESHOLD:
-            MultiThreadUnzipper(args.archive_path, args.outdir,
-                                args.n_threads).unzip()
+            MultiThreadUnzipper(args.archive_path, args.outdir, args.n_threads).unzip()
         elif compression <= THRESHOLD:
-            CombinedUnzipper(args.archive_path, args.outdir, args.n_proc,
-                             args.n_threads).unzip()
+            CombinedUnzipper(
+                args.archive_path,
+                args.outdir,
+                args.n_proc,
+                args.n_threads,
+            ).unzip()
     # If mode is given no controller is needed
     elif args.mode == "mt":
-        MultiThreadUnzipper(args.archive_path, args.outdir,
-                            args.n_threads).unzip()
+        MultiThreadUnzipper(args.archive_path, args.outdir, args.n_threads).unzip()
     elif args.mode == "cmbd":
-        CombinedUnzipper(args.archive_path, args.outdir, args.n_proc,
-                         args.n_threads).unzip()
+        CombinedUnzipper(
+            args.archive_path,
+            args.outdir,
+            args.n_proc,
+            args.n_threads,
+        ).unzip()
