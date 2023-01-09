@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Any, Final, Iterable, Optional, Union
 from zipfile import ZipFile
 
-from custom_exceptions import (AllFilesAreEmpty, CannotUseZeroCores,
-                               EmptyArchiveError, IncorrectNumberOfCores,
-                               UnableToCountCores)
+from .custom_exceptions import (AllFilesAreEmpty, CannotUseZeroCores,
+                                EmptyArchiveError, IncorrectNumberOfCores,
+                                UnableToCountCores)
 
 # Threshold to choose mode
 THRESHOLD: Final = 0.5

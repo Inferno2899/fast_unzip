@@ -1,5 +1,5 @@
-from fast_unzip import fast_unzip
+from .fast_unzip import main
 
 # entry point
 if __name__ == '__main__':
-    fast_unzip.main()
+    main()
