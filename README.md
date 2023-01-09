@@ -22,7 +22,7 @@ pip install fast_unzip
 ```
 
 ## Usage
-Ir's compulsory you specify the archive PATH like this.
+It's compulsory you specify the archive PATH like this.
 
 MacOS/Linux
 ```bash
@@ -55,7 +55,7 @@ Number of threads is chosen as `min(32, os.cpu_count())`.
 
 Number of processes is chosen as `os.cpu_count()`.
 
-For some reasons `os.cpu_count()` can fail to determine your system characteristics. This way you'll be given an error and you need to specify this arguments implicitly. I highly recommend you use formula from above.
+For some reasons `os.cpu_count()` can fail to determine your system characteristics. This way you'll be given an error and you need to specify this arguments explicitly. I highly recommend you use formula from above.
 
 If you try to enter more processes than `os.cpu_count()`
 found you'll be given an error. You can either choose an appropriate number of processes or leave it to program to decide.
