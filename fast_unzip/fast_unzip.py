@@ -21,17 +21,20 @@ THRESHOLD: Final = 0.5
 # Aliases
 ReadOnlyBuffer = bytes
 if sys.version_info >= (3, 8):
-    WriteableBuffer = Union[bytearray, memoryview, mmap.mmap,
-                            pickle.PickleBuffer]
+    WriteableBuffer = Union[bytearray, memoryview,
+                            mmap.mmap, pickle.PickleBuffer]
 else:
     WriteableBuffer = Union[
-        bytearray, memoryview, array.array[Any], mmap.mmap, ctypes._CData
+        bytearray,
+        memoryview,
+        array.array[Any],
+        mmap.mmap,
+        ctypes._CData,
     ]
 ReadableBuffer = Union[ReadOnlyBuffer, WriteableBuffer]
 
 
 class Unzipper:
-
     """Unzipper prototype."""
 
     def __init__(self, zip_archive: str, path: str,
@@ -60,7 +63,6 @@ class Unzipper:
 
 
 class MultiThreadUnzipper(Unzipper):
-
     """Unzipper for high compression levels"""
 
     # unzip files from an archive
@@ -85,13 +87,12 @@ class MultiThreadUnzipper(Unzipper):
                 # split the copy operations into chunks
                 for i in range(0, len(files), chunksize):
                     # select a chunk of filenames
-                    filenames = files[i:(i + chunksize)]
+                    filenames = files[i: (i + chunksize)]
                     # submit the batch copy task
                     _ = exe.submit(self._unzip_files, handle, filenames)
 
 
 class CombinedUnzipper(Unzipper):
-
     """Unzipper for low compression levels"""
 
     def __init__(
@@ -159,7 +160,7 @@ class CombinedUnzipper(Unzipper):
             # split the copy operations into chunks
             for i in range(0, len(files), chunksize):
                 # select a chunk of filenames
-                filenames = files[i:(i + chunksize)]
+                filenames = files[i: (i + chunksize)]
                 # submit the batch copy task
                 _ = exe.submit(self._unzip_files, filenames)
 
@@ -199,25 +200,29 @@ class Controller:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="fast unzipper",
+        prog="fast_unzip",
         description="unzips ZIP archives",
     )
     parser.add_argument(
-        "archive_path", metavar="path", type=Path, help="path to ZIP archive"
+        "archive_path",
+        metavar="PATH",
+        type=Path,
+        help="path to ZIP archive",
     )
     parser.add_argument(
         "-p",
         "--n_proc",
         default=None,
-        type=int, metavar="",
-        help="number of processes"
+        type=int,
+        metavar="N",
+        help="number of processes",
     )
     parser.add_argument(
         "-t",
         "--n_threads",
         default=None,
         type=int,
-        metavar="",
+        metavar="N",
         help="number of threads for tasks in one process",
     )
     parser.add_argument(
@@ -233,7 +238,7 @@ def parse_args() -> argparse.Namespace:
         "-m",
         "--mode",
         default=None,
-        metavar="",
+        metavar="MODE",
         type=str,
         help='mode in which program should work:\
                             "mt" or "cmbd"',
