@@ -14,9 +14,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[tool.black]
-line-length = 88
-
 [tool.poetry.dependencies]
 python = "^3.8"
 
